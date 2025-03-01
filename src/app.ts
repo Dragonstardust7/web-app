@@ -16,8 +16,9 @@ import {Pool} from "pg";
     port: Number(process.env.PGPORT),
 });
 
-  app.get("/", (req, res) => {
-    res.send("Привет Мага!");
+  app.get("/users", (req, res) => {
+    const users = pool.query(`select * from users`);
+    res.json
   });
 
   app.listen(dbPort, () => {
