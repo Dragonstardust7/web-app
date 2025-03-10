@@ -25,6 +25,11 @@ app.get("/users", async (req, res) => {
   res.json(result.rows);
 });
 
+app.get("/users/:id", async (req,res) => {
+  const result = await pool.query(`SELECT id FROM users`);
+  res.json(result.rows);
+})
+
 app.post('/users', async (req, res) => {
   const name = req.body.name;
   const result = await pool.query(`INSERT INTO users (name) VALUES ('${name}') RETURNING *`);
