@@ -1,37 +1,44 @@
-import express from 'express';
-import pool from '../pgdb/pgclient';
-import { createRouteHandler } from '../routers/heandlerRoute';
+import express, { Request, Response } from 'express';
+import pool from '../client/pg';
+const UserRouter = express.Router();
 
-const router = express.Router();
+UserRouter.use(express.json());
 
-router.get("/users", createRouteHandler(async (req:any, res:any) => {
-    const result = await pool.query(`SELECT * FROM users`);
-    res.json(result.rows);
-}));
+UserRouter.get("/", async (_req: Request, res: Response) => {
+  const result = await pool.query("SELECT * FROM users");
+  res.json(result.rows);
+});
 
-router.get("/users/:id", createRouteHandler(async (req:any, res:any) => {
-    const id = req.params.id;
-    const result = await pool.query(`SELECT * FROM users WHERE id = ${id}`);
-    res.json(result.rows[0]);
-}));
+UserRouter.get("/:id", async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const result = await pool.query(`SELECT * FROM users WHERE id = ${id}`);
+  res.json(result.rows[0]);
+});
 
-router.post('/users', createRouteHandler(async (req:any, res:any) => {
-    const name = req.body.name;
-    const result = await pool.query(`INSERT INTO users (name) VALUES ('${name}') RETURNING *`);
-    res.json(result.rows[0]);
-}));
+UserRouter.post('/', async (req: Request, res: Response) => {
+  const { name } = req.body;
+  const result = await pool.query(
+    `INSERT INTO users (name) VALUES ('${name}') RETURNING *`
+  );
+  res.json(result.rows[0]);
+});
 
-router.put('/users/:id', createRouteHandler(async (req:any, res:any) => {
-    const id = req.params.id;
-    const name = req.body.name;
-    const result = await pool.query(`UPDATE users SET name = '${name}' WHERE id = ${id} RETURNING *`);
-    res.json(result.rows[0]);
-}));
+UserRouter.put('/:id', async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const { name } = req.body;
+  const result = await pool.query(
+    `UPDATE users SET name = '${name}' WHERE id = ${id} RETURNING *`
+  );
+  res.json(result.rows[0]);
+});
 
-router.delete('/users/:id', createRouteHandler(async (req:any, res:any) => {
-    const id = req.params.id;
-    const result = await pool.query(`DELETE FROM users WHERE id = ${id} RETURNING *`);
-    res.json(result.rows[0]);
-}));
+UserRouter.delete('/:id', async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const result = await pool.query(
+    `DELETE FROM users WHERE id = ${id} RETURNING *`
+  );
+  res.json(result.rows[0]);
+});
 
-export default router;
+export default UserRouter;
+
