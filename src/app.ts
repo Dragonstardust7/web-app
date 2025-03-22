@@ -1,16 +1,15 @@
-import express from "express";
+import express from 'express';
 import "dotenv/config";
+import userRouter from './routers/users';
 
-  const app = express();
-  const dbPort = process.env.PORT;
+const app = express();
+const port = process.env.PORT;
 
-  app.use(express.json());
-  app.use(express.urlencoded({ extended: true }));
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
-  app.get("/", (req, res) => {
-    res.send("Привет Мага!");
-  });
+app.use('/users', userRouter);
 
-  app.listen(dbPort, () => {
-    console.log(`Сервер запущен на http://127.0.0.1:${dbPort}`);
-  });
+app.listen(port, () => {
+  console.log(`Сервер запущен на http://127.0.0.1:${port}`);
+});
