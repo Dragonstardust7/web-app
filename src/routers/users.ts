@@ -11,32 +11,33 @@ userRouter.get("/", createRouteHandler(async (req: Request, res: Response) => {
 }));
 
 userRouter.get("/:id", createRouteHandler(async (req: Request, res: Response) => {
-  const { id } = req.params;
-  const result = await client.query(`SELECT * FROM users WHERE id = ${id}`);
+  const result = await client.query(
+    "SELECT * FROM users WHERE id = \$1", 
+    [req.params.id]
+  );
   res.json(result.rows[0]);
 }));
 
 userRouter.post('/', createRouteHandler(async (req: Request, res: Response) => {
-  const { name } = req.body;
   const result = await client.query(
-    `INSERT INTO users (name) VALUES ('${name}') RETURNING *`
+    "INSERT INTO users (name) VALUES (\$1) RETURNING *",
+    [req.body.name]
   );
   res.json(result.rows[0]);
 }));
 
 userRouter.put('/:id', createRouteHandler(async (req: Request, res: Response) => {
-  const { id } = req.params;
-  const { name } = req.body;
   const result = await client.query(
-    `UPDATE users SET name = '${name}' WHERE id = ${id} RETURNING *`
+    `UPDATE users SET name = \$1 WHERE id = \$2 RETURNING *`,
+    [req.body.name, req.params.id]
   );
   res.json(result.rows[0]);
 }));
 
 userRouter.delete('/:id', createRouteHandler(async (req: Request, res: Response) => {
-  const { id } = req.params;
   const result = await client.query(
-    `DELETE FROM users WHERE id = ${id} RETURNING *`
+    "DELETE FROM users WHERE id = \$1 RETURNING *",
+    [req.params.id]
   );
   res.json(result.rows[0]);
 }));
