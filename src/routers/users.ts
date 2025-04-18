@@ -1,14 +1,10 @@
 import express, { Request, Response } from "express";
 import { client } from "../client/client";
 import { createRouteHandler } from "../shared/routeHandler";
+import { body, param, validationResult } from "express-validator";
 
 const userRouter = express.Router();
 userRouter.use(express.json());
-
-const isValidId = (id: string): boolean => {
-  const parsed = Number(id);
-  return Number.isInteger(parsed) && parsed > 0;
-};
 
 userRouter.get(
   "/",
@@ -20,12 +16,11 @@ userRouter.get(
 
 userRouter.get(
   "/:id",
+  [param("").isInt({ min: 0 }).withMessage("id must be >= 0")],
   createRouteHandler(async (req: Request, res: Response) => {
-    if (!isValidId(req.params.id)) {
-      return res
-        .status(400)
-        .json({ error: "id должен быть положительным числом" });
-    }
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) throw errors.array();
+
     const result = await client.query("SELECT * FROM users WHERE id = $1", [
       req.params.id,
     ]);
@@ -35,16 +30,16 @@ userRouter.get(
 
 userRouter.post(
   "/",
+  body("name")
+    .isString()
+    .notEmpty()
+    .withMessage("name is required and must not be empty"),
   createRouteHandler(async (req: Request, res: Response) => {
-    if (
-      !req.body.name ||
-      typeof req.body.name !== "string" ||
-      req.body.name.trim() === ""
-    ) {
-      return res
-        .status(400)
-        .json({ error: "name обязателен и не должен быть пустым" });
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
     }
+
     const result = await client.query(
       "INSERT INTO users (name) VALUES ($1) RETURNING *",
       [req.body.name]
@@ -55,21 +50,17 @@ userRouter.post(
 
 userRouter.put(
   "/:id",
+  param("id").isInt({ min: 0 }).withMessage("id must be a positive integer"),
+  body("name")
+    .isString()
+    .notEmpty()
+    .withMessage("name is required and must not be empty"),
   createRouteHandler(async (req: Request, res: Response) => {
-    if (!isValidId(req.params.id)) {
-      return res
-        .status(400)
-        .json({ error: "id должен быть положительным числом" });
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
     }
-    if (
-      !req.body.name ||
-      typeof req.body.name !== "string" ||
-      req.body.name.trim() === ""
-    ) {
-      return res
-        .status(400)
-        .json({ error: "name обязателен и не должен быть пустым" });
-    }
+
     const result = await client.query(
       "UPDATE users SET name = $1 WHERE id = $2 RETURNING *",
       [req.body.name, req.params.id]
@@ -80,12 +71,13 @@ userRouter.put(
 
 userRouter.delete(
   "/:id",
+  param("id").isInt({ min: 0 }).withMessage("id must be a positive integer"),
   createRouteHandler(async (req: Request, res: Response) => {
-    if (!isValidId(req.params.id)) {
-      return res
-        .status(400)
-        .json({ error: "id должен быть положительным числом" });
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
     }
+
     const result = await client.query(
       "DELETE FROM users WHERE id = $1 RETURNING *",
       [req.params.id]
